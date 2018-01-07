@@ -23,8 +23,8 @@ class LearningAgent(Agent):
         ## TO DO ##
         ###########
         # Set any additional class parameters as needed
-        self.attempts = 1.0
-        self.baseA = 0.99
+        self.attempts = 1
+
 
     def reset(self, destination=None, testing=False):
         """ The reset function is called at the beginning of each trial.
@@ -45,9 +45,8 @@ class LearningAgent(Agent):
             self.alpha = 0
         else:
            # self.epsilon = self.epsilon - 0.05
-            self.epsilon = math.pow(self.baseA,self.attempts)
-            self.alpha = self.epsilon*0.3
-            self.attempts += 0.25
+            self.epsilon = math.cos(self.alpha*self.attempts)
+            self.attempts += 1
 
         return None
 
@@ -77,16 +76,22 @@ class LearningAgent(Agent):
         ## TO DO ##
         ###########
         # Calculate the maximum Q-value of all actions for a given state
+        '''
         state_dict_in_Q = self.Q[state]
         maxQ = [None,0.0]
 
         for k,v in state_dict_in_Q.items():
             if v >= maxQ[1]:
                 maxQ[0],maxQ[1] = k,v
+        '''
 
-        #print(maxQ[0])
-        #print "Q",self.Q
-        return maxQ[0]
+        maxlist = []
+        maxQ = max(self.Q[state].values())
+        for k, v in self.Q[state].items():
+            if v == maxQ:
+                maxlist.append(k)
+
+        return random.choice(maxlist)
 
 
     def createQ(self, state):
@@ -121,7 +126,7 @@ class LearningAgent(Agent):
         if not self.learning:
             action = random.choice(self.valid_actions)
         else:
-
+            '''
             estimate_state = self.get_maxQ(state)
             #very good ,
             if estimate_state >= 3.5:
@@ -138,8 +143,9 @@ class LearningAgent(Agent):
 
 
             explorprob = random.uniform(0.0,1.0)
-
-            action = random.choice(self.valid_actions) if explorprob*explorprobfactor < self.epsilon else self.get_maxQ(state)
+            '''
+            explorprob = random.uniform(0.0,1.0)
+            action = random.choice(self.valid_actions) if explorprob < self.epsilon else self.get_maxQ(state)
             print "action:",action
 
         # When not learning, choose a random action
@@ -197,7 +203,7 @@ def run():
     #   learning   - set to True to force the driving agent to use Q-learning
     #    * epsilon - continuous value for the exploration factor, default is 1
     #    * alpha   - continuous value for the learning rate, default is 0.5
-    agent = env.create_agent(LearningAgent,True,1,0.5)
+    agent = env.create_agent(LearningAgent,True,1,0.002)
     ##############
     # Follow the driving agent
     # Flags:
@@ -211,14 +217,15 @@ def run():
     #   display      - set to False to disable the GUI if PyGame is enabled
     #   log_metrics  - set to True to log trial and simulation results to /logs
     #   optimized    - set to True to change the default log file name
-    sim = Simulator(env,update_delay=0.001,log_metrics=True,optimized=True)
+    sim = Simulator(env,update_delay=0.01,log_metrics=True,optimized=True)
     
     ##############
     # Run the simulator
     # Flags:
     #   tolerance  - epsilon tolerance before beginning testing, default is 0.05 
     #   n_test     - discrete number of testing trials to perform, default is 0
-    sim.run(tolerance=0.0065,n_test=50)
+    sim.run(tolerance=0.001,n_test=10)
+
 
 
 if __name__ == '__main__':
